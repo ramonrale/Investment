@@ -82,3 +82,7 @@ Vitest and Playwright are configured for unit and smoke testing. Add scenarios u
 - Implement broker CSV import wizard and command palette
 - Persist market data to PostgreSQL with caching TTLs
 - Build PDF reporting and export flows
+
+## Troubleshooting
+- If npm install fails with registry access errors (403), ensure your network allows access to https://registry.npmjs.org and try clearing any enforced proxies. The included .npmrc pins the public registry.
+- In restricted environments, install from a reachable mirror or use an offline cache of the dependencies.
