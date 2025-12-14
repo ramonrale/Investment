@@ -65,6 +65,11 @@ model Security {
   prices      PriceHistory[]
   dividends   Dividend[]
   corporateActions CorporateAction[]
+  transactions Transaction[] @relation("SecurityTransactions")
+  alerts      Alert[]        @relation("SecurityAlerts")
+  notes       Note[]         @relation("SecurityNotes")
+  watchlistItems WatchlistItem[] @relation("SecurityWatchlistItems")
+  holdingSnapshots HoldingSnapshot[] @relation("SecurityHoldingSnapshots")
 }
 
 model PriceHistory {
@@ -109,7 +114,7 @@ model Transaction {
   portfolio     Portfolio   @relation(fields: [portfolioId], references: [id])
   portfolioId   String
   type          TransactionType
-  security      Security?   @relation(fields: [securityId], references: [id])
+  security      Security?   @relation("SecurityTransactions", fields: [securityId], references: [id])
   securityId    String?
   quantity      Float
   price         Float
@@ -131,7 +136,7 @@ model HoldingSnapshot {
   id            String     @id @default(cuid())
   portfolio     Portfolio  @relation(fields: [portfolioId], references: [id])
   portfolioId   String
-  security      Security   @relation(fields: [securityId], references: [id])
+  security      Security   @relation("SecurityHoldingSnapshots", fields: [securityId], references: [id])
   securityId    String
   quantity      Float
   avgCost       Float
@@ -154,7 +159,7 @@ model WatchlistItem {
   id           String    @id @default(cuid())
   watchlist    Watchlist @relation(fields: [watchlistId], references: [id])
   watchlistId  String
-  security     Security  @relation(fields: [securityId], references: [id])
+  security     Security  @relation("SecurityWatchlistItems", fields: [securityId], references: [id])
   securityId   String
   createdAt    DateTime  @default(now())
   @@unique([watchlistId, securityId])
@@ -166,7 +171,7 @@ model Alert {
   userId       String
   portfolio    Portfolio? @relation(fields: [portfolioId], references: [id])
   portfolioId  String?
-  security     Security?  @relation(fields: [securityId], references: [id])
+  security     Security?  @relation("SecurityAlerts", fields: [securityId], references: [id])
   securityId   String?
   type         AlertType
   threshold    Float
@@ -197,7 +202,7 @@ model Note {
   userId      String
   portfolio   Portfolio? @relation(fields: [portfolioId], references: [id])
   portfolioId String?
-  security    Security? @relation(fields: [securityId], references: [id])
+  security    Security? @relation("SecurityNotes", fields: [securityId], references: [id])
   securityId  String?
   content     String
   createdAt   DateTime  @default(now())
