@@ -1,8 +1,8 @@
 import './globals.css';
 import { ReactNode } from 'react';
-import { ThemeProvider } from 'next-themes';
 import { QueryProvider } from '@/components/layout/query-provider';
 import { AppShell } from '@/components/layout/app-shell';
+import { ThemeProvider } from '@/components/layout/theme-provider';
 
 export const metadata = {
   title: 'US Stock Portfolio OS',
