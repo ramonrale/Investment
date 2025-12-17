@@ -1,0 +1,217 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id            String    @id @default(cuid())
+  email         String    @unique
+  passwordHash  String
+  name          String?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  portfolios    Portfolio[]
+  sessions      Session[]
+  watchlists    Watchlist[]
+  alerts        Alert[]
+  notes         Note[]
+}
+
+model Session {
+  id        String   @id @default(cuid())
+  user      User     @relation(fields: [userId], references: [id])
+  userId    String
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+}
+
+model Portfolio {
+  id             String           @id @default(cuid())
+  name           String
+  type           PortfolioType
+  baseCurrency   String           @default("USD")
+  benchmarkId    String?
+  user           User             @relation(fields: [userId], references: [id])
+  userId         String
+  transactions   Transaction[]
+  holdings       HoldingSnapshot[]
+  alerts         Alert[]
+  notes          Note[]
+  createdAt      DateTime         @default(now())
+  updatedAt      DateTime         @updatedAt
+}
+
+enum PortfolioType {
+  REAL
+  PAPER
+  WATCH
+}
+
+model Security {
+  id          String   @id @default(cuid())
+  ticker      String   @unique
+  name        String
+  exchange    String?
+  sector      String?
+  industry    String?
+  marketCap   Float?
+  currency    String   @default("USD")
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  prices      PriceHistory[]
+  dividends   Dividend[]
+  corporateActions CorporateAction[]
+  transactions Transaction[] @relation("SecurityTransactions")
+  alerts      Alert[]        @relation("SecurityAlerts")
+  notes       Note[]         @relation("SecurityNotes")
+  watchlistItems WatchlistItem[] @relation("SecurityWatchlistItems")
+  holdingSnapshots HoldingSnapshot[] @relation("SecurityHoldingSnapshots")
+}
+
+model PriceHistory {
+  id         String   @id @default(cuid())
+  security   Security @relation(fields: [securityId], references: [id])
+  securityId String
+  date       DateTime
+  open       Float
+  high       Float
+  low        Float
+  close      Float
+  volume     Float
+  provider   String
+  @@unique([securityId, date, provider])
+}
+
+model Dividend {
+  id          String   @id @default(cuid())
+  security    Security @relation(fields: [securityId], references: [id])
+  securityId  String
+  exDate      DateTime
+  amount      Float
+  currency    String   @default("USD")
+}
+
+model CorporateAction {
+  id           String   @id @default(cuid())
+  security     Security @relation(fields: [securityId], references: [id])
+  securityId   String
+  type         CorporateActionType
+  ratio        Float?
+  effectiveDate DateTime
+}
+
+enum CorporateActionType {
+  SPLIT
+  DIVIDEND
+}
+
+model Transaction {
+  id            String      @id @default(cuid())
+  portfolio     Portfolio   @relation(fields: [portfolioId], references: [id])
+  portfolioId   String
+  type          TransactionType
+  security      Security?   @relation("SecurityTransactions", fields: [securityId], references: [id])
+  securityId    String?
+  quantity      Float
+  price         Float
+  fees          Float        @default(0)
+  occurredAt    DateTime
+  createdAt     DateTime     @default(now())
+}
+
+enum TransactionType {
+  BUY
+  SELL
+  DIVIDEND
+  FEE
+  TRANSFER
+  SPLIT
+}
+
+model HoldingSnapshot {
+  id            String     @id @default(cuid())
+  portfolio     Portfolio  @relation(fields: [portfolioId], references: [id])
+  portfolioId   String
+  security      Security   @relation("SecurityHoldingSnapshots", fields: [securityId], references: [id])
+  securityId    String
+  quantity      Float
+  avgCost       Float
+  marketValue   Float
+  asOfDate      DateTime
+  createdAt     DateTime   @default(now())
+  @@index([portfolioId, asOfDate])
+}
+
+model Watchlist {
+  id        String        @id @default(cuid())
+  name      String
+  user      User          @relation(fields: [userId], references: [id])
+  userId    String
+  items     WatchlistItem[]
+  createdAt DateTime      @default(now())
+}
+
+model WatchlistItem {
+  id           String    @id @default(cuid())
+  watchlist    Watchlist @relation(fields: [watchlistId], references: [id])
+  watchlistId  String
+  security     Security  @relation("SecurityWatchlistItems", fields: [securityId], references: [id])
+  securityId   String
+  createdAt    DateTime  @default(now())
+  @@unique([watchlistId, securityId])
+}
+
+model Alert {
+  id           String     @id @default(cuid())
+  user         User       @relation(fields: [userId], references: [id])
+  userId       String
+  portfolio    Portfolio? @relation(fields: [portfolioId], references: [id])
+  portfolioId  String?
+  security     Security?  @relation("SecurityAlerts", fields: [securityId], references: [id])
+  securityId   String?
+  type         AlertType
+  threshold    Float
+  direction    String
+  createdAt    DateTime   @default(now())
+  notifications NotificationLog[]
+}
+
+enum AlertType {
+  PRICE
+  PERCENT_MOVE
+  DRAWNDOWN
+  VOLATILITY
+}
+
+model NotificationLog {
+  id        String   @id @default(cuid())
+  alert     Alert    @relation(fields: [alertId], references: [id])
+  alertId   String
+  channel   String
+  sentAt    DateTime @default(now())
+  status    String   @default("sent")
+}
+
+model Note {
+  id          String    @id @default(cuid())
+  user        User      @relation(fields: [userId], references: [id])
+  userId      String
+  portfolio   Portfolio? @relation(fields: [portfolioId], references: [id])
+  portfolioId String?
+  security    Security? @relation("SecurityNotes", fields: [securityId], references: [id])
+  securityId  String?
+  content     String
+  createdAt   DateTime  @default(now())
+}
+
+model Benchmark {
+  id        String   @id @default(cuid())
+  ticker    String   @unique
+  name      String
+  currency  String   @default("USD")
+  createdAt DateTime @default(now())
+}
