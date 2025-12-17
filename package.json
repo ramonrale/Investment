@@ -13,6 +13,9 @@
     "test": "vitest",
     "test:e2e": "playwright test"
   },
+  "prisma": {
+    "seed": "ts-node prisma/seed.ts"
+  },
   "dependencies": {
     "@prisma/client": "^5.16.1",
     "@tanstack/react-query": "^5.51.0",
